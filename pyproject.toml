@@ -1,11 +1,24 @@
 [project]
 name = "geovar"
 version = "0.1.0"
-description = "Add your description here"
+description = "Variational Geodesic Initialization for Transition States Optimization"
+authors = [{ name = "Kfir Kaplan", email = "kaplan.kfir@campus.technion.ac.il" }]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "matplotlib>=3.10.8",
+    "networkx>=3.6.1",
     "numpy>=2.4.0",
+    "pytest>=9.0.2",
+    "rdkit>=2025.9.3",
     "scipy>=1.16.3",
 ]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/geovar"]
+
+[project.scripts]
+geovar = "geovar.cli:main"
