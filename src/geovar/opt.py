@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import differential_evolution
 from geovar.loss import PathObjective
+from tqdm import tqdm
 
 def optimize_path(atoms, r_coords, p_coords, active_indices, spectator_indices, verbose=False):
     """
@@ -11,6 +12,9 @@ def optimize_path(atoms, r_coords, p_coords, active_indices, spectator_indices, 
     """
     
     objective = PathObjective(r_coords, p_coords, active_indices, spectator_indices, atoms)
+    
+    if verbose:
+        objective.log_curve_selection()
     
     n_active = len(active_indices)
     # 3 coords per atom, 2 params per coord => 6 params per atom
@@ -33,18 +37,32 @@ def optimize_path(atoms, r_coords, p_coords, active_indices, spectator_indices, 
     # Run DE
     # reducing workers to 1 to avoid multiprocessing issues in some envs, 
     # but -1 (all cpus) is better for performance.
-    result = differential_evolution(
-        objective.total_loss,
-        bounds,
-        strategy='best1bin',
-        maxiter=300, 
-        popsize=25,
-        tol=0.01,
-        mutation=(0.5, 1),
-        recombination=0.7,
-        disp=verbose,
-        workers=1 
-    )
+    
+    max_iter = 300
+    pbar = tqdm(total=max_iter, disable=not verbose, desc="Optimization")
+    
+    def callback(xk, convergence=None):
+        pbar.update(1)
+        # Optional: Update description with current loss if expensive calculation is ok
+        # loss = objective.total_loss(xk) 
+        # pbar.set_description(f"Optimization (Loss: {loss:.2f})")
+    
+    try:
+        result = differential_evolution(
+            objective.total_loss,
+            bounds,
+            strategy='best1bin',
+            maxiter=max_iter, 
+            popsize=25,
+            tol=0.01,
+            mutation=(0.5, 1),
+            recombination=0.7,
+            disp=False, # Disable internal printing, use tqdm
+            workers=1,
+            callback=callback
+        )
+    finally:
+        pbar.close()
     
     # Reconstruct TS Geometry at RC=0
     best_genes = result.x

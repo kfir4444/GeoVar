@@ -1,5 +1,5 @@
 import numpy as np
-from geovar.curves import NormalizedSigmoid, GaussianBump, Linear
+from geovar.curves import NormalizedSigmoid, GaussianBump
 from geovar.physics import calculate_bond_order, check_steric_clash
 
 class PathObjective:
@@ -28,6 +28,24 @@ class PathObjective:
         # Calculate Target Valencies from Reactant Geometry
         # We assume Reactant is a valid structure
         self.target_valencies = self._calculate_valencies(r_coords)
+
+    def log_curve_selection(self):
+        """Prints the selected curve type for each active coordinate."""
+        print("Curve Selection per Active Coordinate:")
+        n_active = len(self.active_indices)
+        dims = ['x', 'y', 'z']
+        
+        for i in range(n_active):
+            atom_idx = self.active_indices[i]
+            atom_sym = self.atoms[atom_idx]
+            print(f"  Atom {atom_idx} ({atom_sym}):")
+            for dim in range(3):
+                q_start = self.active_r[i, dim]
+                q_end = self.active_p[i, dim]
+                dist = abs(q_end - q_start)
+                
+                curve_type = "GaussianBump" if dist < 0.5 else "NormalizedSigmoid"
+                print(f"    {dims[dim]}: dist={dist:.4f} -> {curve_type}")
 
     def _calculate_valencies(self, coords):
         # Calculate sum of Bond Orders for each ACTIVE atom
