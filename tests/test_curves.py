@@ -1,5 +1,4 @@
 import unittest
-import numpy as np
 from geovar.curves import NormalizedSigmoid, GaussianBump, Linear
 
 class TestCurves(unittest.TestCase):

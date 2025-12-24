@@ -1,6 +1,5 @@
 import argparse
 import sys
-import numpy as np
 from geovar.geom import read_xyz, write_xyz, identify_active_indices, align_product_to_reactant
 from geovar.opt import optimize_path
 
@@ -14,14 +13,16 @@ def main():
     args = parser.parse_args()
     
     # 1. Read
-    if args.verbose: print(f"Reading {args.reactant}...")
+    if args.verbose:
+        print(f"Reading {args.reactant}...")
     try:
         atoms_r, coords_r = read_xyz(args.reactant)
     except Exception as e:
         print(f"Error reading reactant: {e}")
         sys.exit(1)
     
-    if args.verbose: print(f"Reading {args.product}...")
+    if args.verbose:
+        print(f"Reading {args.product}...")
     try:
         atoms_p, coords_p = read_xyz(args.product)
     except Exception as e:
@@ -35,7 +36,8 @@ def main():
     atoms = atoms_r
     
     # 2. Identify Active Set
-    if args.verbose: print("Identifying Active Set...")
+    if args.verbose:
+        print("Identifying Active Set...")
     try:
         active_indices, spectator_indices = identify_active_indices(atoms, coords_r, coords_p)
     except ImportError as e:
@@ -59,11 +61,13 @@ def main():
         sys.exit(0)
 
     # 3. Align
-    if args.verbose: print("Aligning Product to Reactant...")
+    if args.verbose:
+        print("Aligning Product to Reactant...")
     coords_p_aligned = align_product_to_reactant(coords_r, coords_p, spectator_indices)
     
     # 4. Optimize
-    if args.verbose: print("Optimizing Path...")
+    if args.verbose:
+        print("Optimizing Path...")
     ts_coords, res = optimize_path(atoms, coords_r, coords_p_aligned, active_indices, spectator_indices, verbose=args.verbose)
     
     if args.verbose:
@@ -72,7 +76,8 @@ def main():
 
     # 5. Output
     write_xyz(args.output, atoms, ts_coords, comment=f"GeoVar TS Guess | Loss: {res.fun:.4f}")
-    if args.verbose: print(f"Wrote TS guess to {args.output}")
+    if args.verbose:
+        print(f"Wrote TS guess to {args.output}")
 
 if __name__ == "__main__":
     main()

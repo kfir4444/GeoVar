@@ -18,7 +18,6 @@ def read_xyz(filepath):
     with open(filepath, 'r') as f:
         lines = f.readlines()
     
-    num_atoms = int(lines[0].strip())
     atoms = []
     coords = []
     

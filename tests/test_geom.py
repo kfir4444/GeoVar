@@ -2,14 +2,10 @@ import unittest
 import numpy as np
 import os
 import tempfile
-import sys
-
-try:
-    from rdkit import Chem
-except ImportError:
-    raise ImportError("RDKit is required for these tests. Please install RDKit to proceed.")
-
 from geovar.geom import read_xyz, write_xyz, align_product_to_reactant, identify_active_indices
+
+# MANDATE: Tests MUST fail if RDKit is missing. 
+# No skips. No mercy.
 
 class TestGeom(unittest.TestCase):
     def setUp(self):
