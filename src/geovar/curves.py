@@ -60,18 +60,18 @@ class NormalizedSigmoid:
         
         ds_raw_val = s_val * (1.0 - s_val)
         
-        ds_dt0 = ds_raw_val * self.k
-        ds_dk  = ds_raw_val * (self.t0 - rc)
+        ds_dt0 = ds_raw_val * (-self.k)
+        ds_dk  = ds_raw_val * (rc - self.t0)
         
         s_min_val = self.s_min
         ds_min_raw = s_min_val * (1.0 - s_min_val)
-        ds_min_dt0 = ds_min_raw * self.k
-        ds_min_dk  = ds_min_raw * (self.t0 - (-1.0))
+        ds_min_dt0 = ds_min_raw * (-self.k)
+        ds_min_dk  = ds_min_raw * (-1.0 - self.t0)
         
         s_max_val = self.s_max
         ds_max_raw = s_max_val * (1.0 - s_max_val)
-        ds_max_dt0 = ds_max_raw * self.k
-        ds_max_dk  = ds_max_raw * (self.t0 - 1.0)
+        ds_max_dt0 = ds_max_raw * (-self.k)
+        ds_max_dk  = ds_max_raw * (1.0 - self.t0)
         
         dD_dt0 = ds_max_dt0 - ds_min_dt0
         dD_dk  = ds_max_dk  - ds_min_dk
@@ -95,20 +95,20 @@ class NormalizedSigmoid:
         
         s_min_val = self.s_min
         ds_min_raw = s_min_val * (1.0 - s_min_val)
-        ds_min_dt0 = ds_min_raw * self.k
-        ds_min_dk  = ds_min_raw * (self.t0 + 1.0)
+        ds_min_dt0 = ds_min_raw * (-self.k)
+        ds_min_dk  = ds_min_raw * (-1.0 - self.t0)
         
         s_max_val = self.s_max
         ds_max_raw = s_max_val * (1.0 - s_max_val)
-        ds_max_dt0 = ds_max_raw * self.k
-        ds_max_dk  = ds_max_raw * (self.t0 - 1.0)
+        ds_max_dt0 = ds_max_raw * (-self.k)
+        ds_max_dk  = ds_max_raw * (1.0 - self.t0)
         
         dD_dt0 = ds_max_dt0 - ds_min_dt0
         dD_dk  = ds_max_dk  - ds_min_dk
         
-        d_Sprime_dt0 = (self.k**2) * s_val * (1.0 - s_val) * (1.0 - 2.0 * s_val)
+        d_Sprime_dt0 = -(self.k**2) * s_val * (1.0 - s_val) * (1.0 - 2.0 * s_val)
         
-        dS_dk = s_val * (1.0 - s_val) * (self.t0 - rc)
+        dS_dk = s_val * (1.0 - s_val) * (rc - self.t0)
         d_Sprime_dk = s_val * (1.0 - s_val) + self.k * (1.0 - 2.0 * s_val) * dS_dk
         
         num_t0 = self.denom * d_Sprime_dt0 - ds_val * dD_dt0
