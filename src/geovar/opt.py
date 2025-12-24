@@ -22,7 +22,7 @@ def optimize_path(atoms, r_coords, p_coords, active_indices, spectator_indices, 
     n_params = n_active * 6
     
     if n_active == 0:
-        return r_coords, None
+        return r_coords, None, objective
 
     # Bounds: t0 in [-1.5, 1.5], k in [0.5, 15.0]
     bounds = []
@@ -97,4 +97,4 @@ def optimize_path(atoms, r_coords, p_coords, active_indices, spectator_indices, 
     ts_full_coords[spectator_indices] = ts_spectator_coords
     ts_full_coords[active_indices] = ts_active_coords
     
-    return ts_full_coords, best_result
+    return ts_full_coords, best_result, objective
