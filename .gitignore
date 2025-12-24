@@ -1,10 +1,39 @@
-# Python-generated files
+# --- Python Core ---
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+
+# --- Distribution / Build ---
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
+*.egg
+MANIFEST
 
-# Virtual environments
-.venv
+# --- Virtual Environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Tooling Caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# --- Test Coverage ---
+.coverage
+htmlcov/
+coverage.xml
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --- Project Specific ---
+GEMINI.md
