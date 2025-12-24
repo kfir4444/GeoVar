@@ -4,12 +4,10 @@ import os
 import tempfile
 import sys
 
-# FACT: MagicMock is for the weak. Schrutes use concrete implementations or nothing.
 try:
     from rdkit import Chem
-    HAS_RDKIT = True
 except ImportError:
-    HAS_RDKIT = False
+    raise ImportError("RDKit is required for these tests. Please install RDKit to proceed.")
 
 from geovar.geom import read_xyz, write_xyz, align_product_to_reactant, identify_active_indices
 
