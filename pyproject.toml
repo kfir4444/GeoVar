@@ -21,5 +21,10 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/geovar"]
 
+[dependency-groups]
+dev = [
+    "ruff>=0.14.10",
+]
+
 [project.scripts]
 geovar = "geovar.cli:main"
