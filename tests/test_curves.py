@@ -60,5 +60,103 @@ class TestCurves(unittest.TestCase):
         analytic_d2 = curve.second_deriv(rc)
         self.assertAlmostEqual(numeric_d2, analytic_d2, places=4)
 
+    def test_sigmoid_param_derivs(self):
+        """Test derivatives of q(rc) w.r.t parameters t0 and k."""
+        q_start, q_end = 0.0, 1.0
+        t0, k = 0.1, 2.0
+        rc = 0.3
+        
+        curve = NormalizedSigmoid(q_start, q_end, t0, k)
+        analytic_grads = curve.param_derivs(rc)
+        
+        # Check d/dt0
+        h = 1e-5
+        c_plus = NormalizedSigmoid(q_start, q_end, t0 + h, k)
+        c_minus = NormalizedSigmoid(q_start, q_end, t0 - h, k)
+        num_dt0 = (c_plus.value(rc) - c_minus.value(rc)) / (2*h)
+        self.assertAlmostEqual(num_dt0, analytic_grads[0], places=4)
+        
+        # Check d/dk
+        c_plus = NormalizedSigmoid(q_start, q_end, t0, k + h)
+        c_minus = NormalizedSigmoid(q_start, q_end, t0, k - h)
+        num_dk = (c_plus.value(rc) - c_minus.value(rc)) / (2*h)
+        self.assertAlmostEqual(num_dk, analytic_grads[1], places=4)
+
+    def test_gaussian_param_derivs(self):
+        """Test derivatives of q(rc) w.r.t parameters t0 and k."""
+        q_start, q_end = 0.0, 1.0
+        t0, k = -0.2, 3.0
+        rc = 0.0
+        
+        curve = GaussianBump(q_start, q_end, t0, k)
+        analytic_grads = curve.param_derivs(rc)
+        
+        # Check d/dt0
+        h = 1e-5
+        c_plus = GaussianBump(q_start, q_end, t0 + h, k)
+        c_minus = GaussianBump(q_start, q_end, t0 - h, k)
+        num_dt0 = (c_plus.value(rc) - c_minus.value(rc)) / (2*h)
+        self.assertAlmostEqual(num_dt0, analytic_grads[0], places=4)
+        
+        # Check d/dk
+        c_plus = GaussianBump(q_start, q_end, t0, k + h)
+        c_minus = GaussianBump(q_start, q_end, t0, k - h)
+        num_dk = (c_plus.value(rc) - c_minus.value(rc)) / (2*h)
+        self.assertAlmostEqual(num_dk, analytic_grads[1], places=4)
+
+    def test_sigmoid_mixed_param_derivs(self):
+        """Test derivatives of dq/dRC w.r.t parameters t0 and k."""
+        q_start, q_end = 0.0, 1.0
+        t0, k = 0.0, 1.5
+        rc = 0.5
+        
+        curve = NormalizedSigmoid(q_start, q_end, t0, k)
+        analytic_grads = curve.mixed_param_derivs(rc)
+        
+        # Check d(dq/dRC)/dt0
+        h = 1e-5
+        c_plus = NormalizedSigmoid(q_start, q_end, t0 + h, k)
+        c_minus = NormalizedSigmoid(q_start, q_end, t0 - h, k)
+        num_dt0 = (c_plus.deriv(rc) - c_minus.deriv(rc)) / (2*h)
+        self.assertAlmostEqual(num_dt0, analytic_grads[0], places=4)
+        
+        # Check d(dq/dRC)/dk
+        c_plus = NormalizedSigmoid(q_start, q_end, t0, k + h)
+        c_minus = NormalizedSigmoid(q_start, q_end, t0, k - h)
+        num_dk = (c_plus.deriv(rc) - c_minus.deriv(rc)) / (2*h)
+        self.assertAlmostEqual(num_dk, analytic_grads[1], places=4)
+
+    def test_gaussian_mixed_param_derivs(self):
+        """Test derivatives of dq/dRC w.r.t parameters t0 and k."""
+        q_start, q_end = 0.0, 1.0
+        t0, k = 0.1, 2.5
+        rc = -0.3
+        
+        curve = GaussianBump(q_start, q_end, t0, k)
+        analytic_grads = curve.mixed_param_derivs(rc)
+        
+        # Check d(dq/dRC)/dt0
+        h = 1e-5
+        c_plus = GaussianBump(q_start, q_end, t0 + h, k)
+        c_minus = GaussianBump(q_start, q_end, t0 - h, k)
+        num_dt0 = (c_plus.deriv(rc) - c_minus.deriv(rc)) / (2*h)
+        self.assertAlmostEqual(num_dt0, analytic_grads[0], places=4)
+        
+        # Check d(dq/dRC)/dk
+        c_plus = GaussianBump(q_start, q_end, t0, k + h)
+        c_minus = GaussianBump(q_start, q_end, t0, k - h)
+        num_dk = (c_plus.deriv(rc) - c_minus.deriv(rc)) / (2*h)
+        self.assertAlmostEqual(num_dk, analytic_grads[1], places=4)
+        
+    def test_extreme_parameters(self):
+        # High steepness
+        curve = NormalizedSigmoid(0, 1, 0, 20.0)
+        self.assertAlmostEqual(curve.value(0), 0.5, places=2)
+        
+        # Extreme t0 (near boundary)
+        curve = GaussianBump(0, 1, 0.9, 1.0)
+        self.assertAlmostEqual(curve.value(-1), 0.0)
+        self.assertAlmostEqual(curve.value(1), 1.0)
+
 if __name__ == '__main__':
     unittest.main()

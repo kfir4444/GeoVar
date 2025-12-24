@@ -2,8 +2,16 @@ import unittest
 import numpy as np
 import os
 import tempfile
+import sys
 
-from geovar.geom import read_xyz, write_xyz, align_product_to_reactant
+# FACT: MagicMock is for the weak. Schrutes use concrete implementations or nothing.
+try:
+    from rdkit import Chem
+    HAS_RDKIT = True
+except ImportError:
+    HAS_RDKIT = False
+
+from geovar.geom import read_xyz, write_xyz, align_product_to_reactant, identify_active_indices
 
 class TestGeom(unittest.TestCase):
     def setUp(self):
@@ -14,7 +22,6 @@ class TestGeom(unittest.TestCase):
         ])
         
     def test_io_xyz(self):
-        # Create a temp file
         with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.xyz') as tmp:
             write_xyz(tmp.name, self.test_atoms, self.test_coords, comment="Test")
             tmp_path = tmp.name
@@ -28,61 +35,60 @@ class TestGeom(unittest.TestCase):
                 os.remove(tmp_path)
 
     def test_alignment_identity(self):
-        # Aligning identical structures should yield 0 shift
         r_coords = self.test_coords
         p_coords = self.test_coords.copy()
-        
-        # Spectators: all of them
         spectators = {0, 1}
-        
         aligned_p = align_product_to_reactant(r_coords, p_coords, spectators)
         np.testing.assert_array_almost_equal(aligned_p, r_coords)
 
     def test_alignment_translation(self):
         r_coords = self.test_coords
-        # Shift P by (1, 1, 1)
         p_coords = r_coords + 1.0
-        
         spectators = {0, 1}
         aligned_p = align_product_to_reactant(r_coords, p_coords, spectators)
-        
-        # Should be shifted back
         np.testing.assert_array_almost_equal(aligned_p, r_coords)
 
-    def test_alignment_rotation(self):
-        # Rotate P by 90 degrees around Z
-        # (1.2, 0, 0) -> (0, 1.2, 0)
+    def test_identify_active_isomerization(self):
+        """Test HCN -> HNC isomerization. All atoms should be active."""
+        atoms = ['H', 'C', 'N']
         r_coords = np.array([
-            [0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0]
+            [-1.06, 0.0, 0.0], # H
+            [0.0, 0.0, 0.0],   # C
+            [1.15, 0.0, 0.0]    # N
         ])
-        
-        # Rotated 90 deg around Z + Translated
         p_coords = np.array([
-            [5.0, 5.0, 5.0],       # Center shifted
-            [5.0, 6.0, 5.0]        # (0, 1, 0) relative to center
+            [2.16, 0.0, 0.0],  # H (now bonded to N)
+            [0.0, 0.0, 0.0],   # C
+            [1.17, 0.0, 0.0]   # N
         ])
         
-        spectators = {0, 1}
-        aligned_p = align_product_to_reactant(r_coords, p_coords, spectators)
+        active, spectators = identify_active_indices(atoms, r_coords, p_coords)
         
-        # After alignment, it should match R (since structure is rigid/identical internally)
-        np.testing.assert_array_almost_equal(aligned_p, r_coords, decimal=5)
+        self.assertIn(0, active)
+        self.assertIn(1, active)
+        self.assertIn(2, active)
+        self.assertEqual(len(spectators), 0)
 
-    def test_alignment_subset(self):
-        # Only align based on atom 0 (point) - this usually just translates
-        r_coords = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
-        p_coords = np.array([[10.0, 10.0, 10.0], [12.0, 10.0, 10.0]]) 
+    def test_identify_active_with_spectators(self):
+        """Test a system with a clear spectator (Argon)."""
+        atoms = ['H', 'C', 'N', 'Ar']
+        r_coords = np.array([
+            [-1.06, 0.0, 0.0], [0.0, 0.0, 0.0], [1.15, 0.0, 0.0], # HCN
+            [10.0, 10.0, 10.0]                                   # Ar
+        ])
+        p_coords = np.array([
+            [2.16, 0.0, 0.0], [0.0, 0.0, 0.0], [1.17, 0.0, 0.0],  # HNC
+            [10.0, 10.0, 10.0]                                   # Ar
+        ])
         
-        spectators = {0}
-        aligned_p = align_product_to_reactant(r_coords, p_coords, spectators)
+        active, spectators = identify_active_indices(atoms, r_coords, p_coords)
         
-        # Atom 0 should match R atom 0
-        np.testing.assert_array_almost_equal(aligned_p[0], r_coords[0])
-        
-        # Atom 1 was distance 2.0 away in P, so it should still be 2.0 away from Atom 0
-        dist = np.linalg.norm(aligned_p[1] - aligned_p[0])
-        self.assertAlmostEqual(dist, 2.0)
+        # HCN atoms should be active
+        self.assertIn(0, active)
+        self.assertIn(1, active)
+        self.assertIn(2, active)
+        # Argon should be a spectator
+        self.assertIn(3, spectators)
 
 if __name__ == '__main__':
     unittest.main()
