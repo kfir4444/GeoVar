@@ -14,7 +14,7 @@ class TestOpt(unittest.TestCase):
         
         # This will run the optimization
         # We limit iterations to make it fast
-        ts_coords, res = optimize_path(atoms, r_coords, p_coords, active_indices, spectator_indices, verbose=False)
+        ts_coords, res, _ = optimize_path(atoms, r_coords, p_coords, active_indices, spectator_indices, verbose=False)
         
         # Result should be roughly in the middle (RC=0) for a symmetric path
         # But optimize_path returns the geometry at RC=0.
@@ -34,7 +34,7 @@ class TestOpt(unittest.TestCase):
         active = []
         spectator = [0]
         
-        ts_coords, res = optimize_path(atoms, r_coords, p_coords, active, spectator)
+        ts_coords, res, _ = optimize_path(atoms, r_coords, p_coords, active, spectator)
         
         np.testing.assert_array_equal(ts_coords, r_coords)
         self.assertIsNone(res)

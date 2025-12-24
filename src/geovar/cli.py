@@ -2,6 +2,7 @@ import argparse
 import sys
 from geovar.geom import read_xyz, write_xyz, identify_active_indices, align_product_to_reactant
 from geovar.opt import optimize_path
+from geovar.plotter import plot_reaction_path
 
 def main():
     parser = argparse.ArgumentParser(description="GeoVar: Variational Geodesic Initialization for Transition States")
@@ -9,6 +10,7 @@ def main():
     parser.add_argument("product", help="Path to Product XYZ file")
     parser.add_argument("output", help="Path to Output TS XYZ file")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    parser.add_argument("--plot", action="store_true", help="Plot the reaction path (requires matplotlib)")
     
     args = parser.parse_args()
     
@@ -68,7 +70,7 @@ def main():
     # 4. Optimize
     if args.verbose:
         print("Optimizing Path...")
-    ts_coords, res = optimize_path(atoms, coords_r, coords_p_aligned, active_indices, spectator_indices, verbose=args.verbose)
+    ts_coords, res, objective = optimize_path(atoms, coords_r, coords_p_aligned, active_indices, spectator_indices, verbose=args.verbose)
     
     if args.verbose:
         print(f"Optimization Success: {res.success}")
@@ -78,6 +80,13 @@ def main():
     write_xyz(args.output, atoms, ts_coords, comment=f"GeoVar TS Guess | Loss: {res.fun:.4f}")
     if args.verbose:
         print(f"Wrote TS guess to {args.output}")
+
+    # 6. Plot
+    if args.plot:
+        plot_name = args.output.replace(".xyz", ".png")
+        if plot_name == args.output:
+            plot_name = args.output + ".png"
+        plot_reaction_path(objective, res.x, output_path=plot_name)
 
 if __name__ == "__main__":
     main()
