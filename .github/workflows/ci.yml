@@ -1,0 +1,41 @@
+name: Run CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  enforce-standards:
+    name: Enforce Standards (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - name: Identify Breach (Checkout)
+        uses: actions/checkout@v4
+
+      - name: Install Manager (uv)
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: "0.5.21"
+
+      - name: Verify Environment (Python ${{ matrix.python-version }})
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        run: |
+          uv sync --all-extras --dev
+          echo "Supplies secured."
+
+      - name: Interrogate Code (Lint)
+        run: |
+          make lint
+        continue-on-error: false
+
+      - name: Survival Test (Unit Tests)
+        run: |
+          make test
