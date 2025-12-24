@@ -1,10 +1,10 @@
 import numpy as np
 from geovar.curves import NormalizedSigmoid, GaussianBump
-from geovar.physics import calculate_bond_order, check_steric_clash
+from geovar.physics import calculate_bond_order, check_steric_clash, get_steric_gradient, get_valency_gradient
 
 class PathObjective:
     def __init__(self, r_coords, p_coords, active_indices, spectator_indices, atoms, 
-                 w_action=1.0, w_chem=10.0, w_steric=5.0):
+                 w_action=1.0, w_chem=2.0, w_steric=2.0):
         self.r_coords = r_coords
         self.p_coords = p_coords
         self.active_indices = sorted(list(active_indices))
@@ -120,6 +120,74 @@ class PathObjective:
         action = np.sum(integrand) * d_rc
         
         return action
+
+    def gradient(self, genes):
+        """
+        Calculates the analytical gradient of the total loss w.r.t genes.
+        Returns: (N_active * 3 * 2) flat array
+        """
+        grid = np.linspace(-1, 1, 30)
+        d_rc = grid[1] - grid[0]
+        
+        curves = self.decode_genes(genes)
+        n_curves = len(curves) # 3 * N_active
+        
+        # --- 1. Action Gradient ---
+        # A = Integral Sum (q')^2
+        # dA/dTheta = Integral 2 * q' * d(q')/dTheta
+        
+        grad_action = np.zeros(n_curves * 2) # 2 params per curve
+        
+        for i, c in enumerate(curves):
+            # Evaluate over grid
+            q_primes = np.array([c.deriv(rc) for rc in grid]) # Shape (30,)
+            mixed_derivs = np.array([c.mixed_param_derivs(rc) for rc in grid]) # Shape (30, 2)
+            
+            # Integral 2 * q' * mixed
+            # (30, 1) * (30, 2) -> sum over grid -> (2,)
+            integrand = 2.0 * q_primes[:, np.newaxis] * mixed_derivs
+            grad_curve = np.sum(integrand, axis=0) * d_rc
+            
+            grad_action[2*i : 2*i+2] = grad_curve
+            
+        # --- 2. Heuristic Penalty Gradient (at RC=0) ---
+        # dP/dTheta = dP/dq(0) * dq(0)/dTheta
+        
+        # Calculate dP/dq(0)
+        active_coords_rc0 = self.get_active_geometry(genes, 0.0)
+        spectator_coords_rc0 = self.get_spectator_geometry(0.0)
+        
+        # Steric Gradient w.r.t active coords
+        grad_steric_coords = get_steric_gradient(active_coords_rc0, self.active_atom_symbols,
+                                                 spectator_coords_rc0, self.spectator_atoms) # (N_act, 3)
+        
+        # Valency Gradient w.r.t active coords
+        full_coords = np.zeros_like(self.r_coords)
+        full_coords[self.spectator_indices] = spectator_coords_rc0
+        full_coords[self.active_indices] = active_coords_rc0
+        
+        grad_valency_coords = get_valency_gradient(active_coords_rc0, self.active_indices, 
+                                                   full_coords, self.atoms, self.target_valencies) # (N_act, 3)
+        
+        grad_penalty_coords = self.w_steric * grad_steric_coords + self.w_chem * grad_valency_coords
+        
+        # Flatten coordinate gradient: (N_act, 3) -> (N_act*3)
+        grad_penalty_coords_flat = grad_penalty_coords.flatten()
+        
+        # Chain rule: dP/dTheta = Sum_coords (dP/dq * dq/dTheta)
+        grad_penalty = np.zeros(n_curves * 2)
+        
+        for i, c in enumerate(curves):
+            # Param derivs at RC=0
+            # [dq/dt0, dq/dk]
+            dq_dtheta = c.param_derivs(0.0)
+            
+            # The coordinate gradient corresponding to this curve (dimension)
+            dP_dq = grad_penalty_coords_flat[i]
+            
+            grad_penalty[2*i : 2*i+2] = dP_dq * dq_dtheta
+            
+        return grad_action + grad_penalty
 
     def get_active_geometry(self, genes, rc):
         curves = self.decode_genes(genes)

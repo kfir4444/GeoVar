@@ -125,31 +125,43 @@ def identify_active_indices(atoms, r_coords, p_coords):
 
 def align_product_to_reactant(r_coords, p_coords, spectator_indices):
     """
-    Rotates and translates Product (P) to match Reactant (R)
-    minimizing RMSD of the SPECTATOR atoms only.
+    Rotates and translates Product (P) to match Reactant (R).
+    Uses weighted Kabsch alignment: Spectators (wt=100), Active (wt=1).
+    This handles cases where spectators < 3 (under-determined rotation) 
+    by using active atoms to resolve the ambiguity.
     """
-    if not spectator_indices:
-        spectator_list = list(range(len(r_coords)))
-    else:
-        spectator_list = list(spectator_indices)
+    num_atoms = len(r_coords)
+    weights = np.ones(num_atoms)
     
-    P_ref = r_coords[spectator_list]
-    P_mobile = p_coords[spectator_list]
+    if spectator_indices:
+        # Give high weight to spectators
+        weights[list(spectator_indices)] = 100.0
     
-    centroid_ref = np.mean(P_ref, axis=0)
-    centroid_mob = np.mean(P_mobile, axis=0)
+    # Weighted Centroids
+    w_sum = np.sum(weights)
+    centroid_r = np.sum(r_coords * weights[:, np.newaxis], axis=0) / w_sum
+    centroid_p = np.sum(p_coords * weights[:, np.newaxis], axis=0) / w_sum
     
-    V = P_mobile - centroid_mob
-    W = P_ref - centroid_ref
+    # Center vectors
+    W = r_coords - centroid_r
+    V = p_coords - centroid_p
     
     try:
-        rotation, rmsd = Rotation.align_vectors(W, V)
-        p_centered = p_coords - centroid_mob
+        rotation, rmsd = Rotation.align_vectors(W, V, weights=weights)
+        p_centered = p_coords - centroid_p
         p_rotated = rotation.apply(p_centered)
-        p_final = p_rotated + centroid_ref
+        p_final = p_rotated + centroid_r
     except ValueError:
         # Fallback to translation only if rotation cannot be determined
-        # (e.g. only 1 point, or all points are at the same location)
-        p_final = p_coords - centroid_mob + centroid_ref
+        p_final = p_coords - centroid_p + centroid_r
+        
+    # Post-correction: Ensure spectator centroid aligns exactly
+    # (Weighted alignment might shift it slightly to satisfy active atoms)
+    if spectator_indices:
+        # Re-calculate centroids based on current p_final
+        spec_list = list(spectator_indices)
+        c_r = np.mean(r_coords[spec_list], axis=0)
+        c_p = np.mean(p_final[spec_list], axis=0)
+        p_final += (c_r - c_p)
     
     return p_final
