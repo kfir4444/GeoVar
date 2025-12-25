@@ -1,5 +1,5 @@
 import numpy as np
-from geovar.curves import NormalizedSigmoid, GaussianBump
+from geovar.curves import NormalizedSigmoid, ErrorFunction
 from geovar.physics import calculate_bond_order, check_steric_clash, get_steric_gradient, get_valency_gradient
 
 class PathObjective:
@@ -44,7 +44,7 @@ class PathObjective:
                 q_end = self.active_p[i, dim]
                 dist = abs(q_end - q_start)
                 
-                curve_type = "GaussianBump" if dist < 0.5 else "NormalizedSigmoid"
+                curve_type = "ErrorFunction" if dist < 0.5 else "NormalizedSigmoid"
                 print(f"    {dims[dim]}: dist={dist:.4f} -> {curve_type}")
 
     def _calculate_valencies(self, coords):
@@ -97,7 +97,7 @@ class PathObjective:
                 # (Spectators are handled as Linear externally/implicitly)
                 
                 if dist < 0.5:
-                    c = GaussianBump(q_start, q_end, t0, k)
+                    c = ErrorFunction(q_start, q_end, t0, k)
                 else:
                     c = NormalizedSigmoid(q_start, q_end, t0, k)
                     

@@ -120,7 +120,7 @@ class NormalizedSigmoid:
         return np.array([grad_t0, grad_dk])
 
 
-class GaussianBump:
+class ErrorFunction:
     """
     A Gaussian Error Function (CDF) curve strictly normalized to start at q_start (-1) and end at q_end (1).
     Params:
