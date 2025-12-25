@@ -8,7 +8,7 @@ GeoVar is managed by `uv`.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/geovar.git
+git clone https://github.com/kfir4444/geovar.git
 cd geovar
 
 # 2. Sync dependencies
