@@ -86,7 +86,7 @@ $$
 
 ### 4. Optimization
 
-The problem is solved by optimizing the set of curve parameters {$\\mathbf{t}_0, \\mathbf{k}$} (2 parameters per active coordinate) using **L-BFGS-B** with random restarts to avoid local minima.
+The problem is solved by optimizing the set of curve parameters $\{\mathbf{t}_0,\ \mathbf{k}\}$ (2 parameters per active coordinate) using **L-BFGS-B** with random restarts to avoid local minima.
 
 *   **Variables:** $t_{0,i} \in [-1.5, 1.5]$, $k_i \in [0.5, 15.0]$.
 *   **Method:** Gradient-based optimization using analytical derivatives of the path action and penalties.
