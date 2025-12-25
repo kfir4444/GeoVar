@@ -11,6 +11,8 @@ def main():
     parser.add_argument("output", help="Path to Output TS XYZ file")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument("--plot", action="store_true", help="Plot the reaction path (requires matplotlib)")
+    parser.add_argument("--charge", type=int, default=0, help="Total molecular charge (default: 0)")
+    parser.add_argument("--no-charged-fragments", action="store_true", help="Disable RDKit charged fragments (use radicals instead)")
     
     args = parser.parse_args()
     
@@ -39,9 +41,13 @@ def main():
     
     # 2. Identify Active Set
     if args.verbose:
-        print("Identifying Active Set...")
+        print(f"Identifying Active Set (Charge={args.charge}, AllowChargedFragments={not args.no_charged_fragments})...")
     try:
-        active_indices, spectator_indices = identify_active_indices(atoms, coords_r, coords_p)
+        active_indices, spectator_indices = identify_active_indices(
+            atoms, coords_r, coords_p, 
+            charge=args.charge, 
+            allow_charged_fragments=not args.no_charged_fragments
+        )
     except ImportError as e:
         print(f"Error: {e}")
         print("Please ensure rdkit is installed.")
