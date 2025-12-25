@@ -37,25 +37,25 @@ The reaction path $q(RC)$ connects the reactant configuration at $RC=-1$ to the 
 
 For a coordinate $i$:
 
-```math
+$$
 q_i(RC) = q_{start} + (q_{end} - q_{start}) \cdot S(RC; t_{0,i}, k_i)
-```
+$$
 
 where $S(RC)$ is a normalized switching function such that $S(-1)=0$ and $S(1)=1$.
 
 #### Curve Types
 
-1.  **Normalized Sigmoid** (for $\Delta q_i \ge 0.5 \text{ \AA}$):
+1.  **Normalized Sigmoid** (for $\Delta q_i \ge 0.5 \text{ Å}$):
     Models standard monotonic transitions (bond breaking/forming).
-    ```math
+    $$
     S_{\sigma}(RC) \propto \frac{1}{1 + e^{-k_i(RC - t_{0,i})}}
-    ```
+    $$
 
-2.  **Normalized Gaussian Bump** (for $\Delta q_i < 0.5 \text{ \AA}$):
+2.  **Normalized Gaussian Bump** (for $\Delta q_i < 0.5 \text{ Å}$):
     Models subtle reorganization where coordinates may not change monotonically.
-    ```math
+    $$
     S_{G}(RC) \propto \text{erf}(k_i(RC - t_{0,i}))
-    ```
+    $$
 
 3.  **Linear Interpolation** (Spectator Atoms):
     Atoms identified as spectators (background environment) are interpolated linearly to maintain structural integrity relative to the active site.
@@ -64,24 +64,24 @@ where $S(RC)$ is a normalized switching function such that $S(-1)=0$ and $S(1)=1
 
 We define the "Action" $\mathcal{S}$ as the approximation of the Riemannian length of the path. Minimizing this action yields the geodesic path.
 
-```math
+$$ 
 \mathcal{L}_{action} = \int_{-1}^{1} \sum_{i \in \text{Active}} \left( \frac{dq_i}{dRC} \right)^2 dRC
-```
+$$ 
 
 ### 3. Chemical Constraints
 
 To ensure the generated Transition State guess (at $RC=0$) is chemically plausible, penalty terms are added to the objective function:
 
-```math
+$$ 
 \mathcal{L}_{total} = w_{action}\mathcal{L}_{action} + w_{chem}\mathcal{L}_{valency} + w_{steric}\mathcal{L}_{steric}
-```
+$$ 
 
 *   **Valency Conservation:** Enforces that the sum of bond orders at the TS matches the target valency of the atoms (derived from the Reactant).
 *   **Steric Repulsion:** Imposes a soft-sphere repulsion penalty to prevent non-bonded atoms from overlapping.
 
 ### 4. Optimization
 
-The problem is solved by optimizing the set of curve parameters {$\mathbf{t}_0, \mathbf{k}$} (2 parameters per active coordinate) using **L-BFGS-B** with random restarts to avoid local minima.
+The problem is solved by optimizing the set of curve parameters {$\\mathbf{t}_0, \\mathbf{k}$} (2 parameters per active coordinate) using **L-BFGS-B** with random restarts to avoid local minima.
 
 *   **Variables:** $t_{0,i} \in [-1.5, 1.5]$, $k_i \in [0.5, 15.0]$.
 *   **Method:** Gradient-based optimization using analytical derivatives of the path action and penalties.
