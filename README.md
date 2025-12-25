@@ -49,17 +49,17 @@ where $S(RC)$ is a normalized switching function such that $S(-1)=0$ and $S(1)=1
 
     Models standard monotonic transitions (bond breaking/forming).
 
-    $$
+    ```math
     S_{\sigma}(RC) \propto \frac{1}{1 + e^{-k_i (RC - t_{0,i})}}
-    $$
+    ```
 
 2. **Normalized Gaussian Bump** (for $\Delta q_i < 0.5\,\mathrm{\AA}$):
 
     Models subtle reorganization where coordinates may not change monotonically.
 
-    $$
+    ```math
     S_{G}(RC) \propto \operatorname{erf}\!\left(k_i (RC - t_{0,i})\right)
-    $$
+    ```
 
 
 3.  **Linear Interpolation** (Spectator Atoms):
