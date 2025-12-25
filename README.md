@@ -47,15 +47,15 @@ where $S(RC)$ is a normalized switching function such that $S(-1)=0$ and $S(1)=1
 
 1.  **Normalized Sigmoid** (for $\Delta q_i \ge 0.5 \text{ Å}$):
     Models standard monotonic transitions (bond breaking/forming).
-    $$
+    $$ 
     S_{\sigma}(RC) \propto \frac{1}{1 + e^{-k_i(RC - t_{0,i})}}
-    $$
+    $$ 
 
 2.  **Normalized Gaussian Bump** (for $\Delta q_i < 0.5 \text{ Å}$):
     Models subtle reorganization where coordinates may not change monotonically.
-    $$
+    $$ 
     S_{G}(RC) \propto \text{erf}(k_i(RC - t_{0,i}))
-    $$
+    $$ 
 
 3.  **Linear Interpolation** (Spectator Atoms):
     Atoms identified as spectators (background environment) are interpolated linearly to maintain structural integrity relative to the active site.
@@ -81,7 +81,7 @@ $$
 
 ### 4. Optimization
 
-The problem is solved by optimizing the set of curve parameters {$\\mathbf{t}_0, \\mathbf{k}$} (2 parameters per active coordinate) using **L-BFGS-B** with random restarts to avoid local minima.
+The problem is solved by optimizing the set of curve parameters {$\mathbf{t}_0, \mathbf{k}$} (2 parameters per active coordinate) using **L-BFGS-B** with random restarts to avoid local minima.
 
 *   **Variables:** $t_{0,i} \in [-1.5, 1.5]$, $k_i \in [0.5, 15.0]$.
 *   **Method:** Gradient-based optimization using analytical derivatives of the path action and penalties.
